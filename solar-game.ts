@@ -151,17 +151,6 @@ namespace SolarGame {
     export function labelText(label: number): string {
         return label == 1 ? "CHARGE" : "SKIP"
     }
-    //% block="%label 的文字"
-    //% group="隱藏答案" weight=80
-    export function labelText(label: number): string {
-        return label == 1 ? "CHARGE" : "SKIP"
-    }
-
-    //% block="標籤 %l"
-    //% group="隱藏答案" weight=70
-    export function labelValue(l: Label): number {
-        return l
-    }
 
     // ---------- 分數 ----------
 
