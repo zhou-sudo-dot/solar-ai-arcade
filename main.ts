@@ -8,7 +8,7 @@ namespace SolarAI {
     let lastError = 0
 
     function predictNormalized(x: number): number {
-        return weight * x + bias >= 0 ? 1 : 0
+        return weight * x + bias > 0 ? 1 : 0
     }
 
     //% block="重設 AI"
