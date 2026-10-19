@@ -50,6 +50,60 @@ namespace SolarAI {
         return lastError != 0
     }
 
+    // 單一輸入時，把所有可能的分界點都試一遍，
+    // 只有找到比目前更多答對的分界才會替換權重
+    function refineBoundary(): void {
+        // 整理出由小到大、不重複的輻射值（插入排序）
+        let vals: number[] = []
+        for (let i = 0; i < dataRadiation.length; i++) {
+            let v = Math.max(0, Math.min(1000, dataRadiation[i]))
+            if (vals.indexOf(v) < 0) {
+                let p = vals.length
+                vals.push(v)
+                while (p > 0 && vals[p - 1] > v) {
+                    vals[p] = vals[p - 1]
+                    p -= 1
+                }
+                vals[p] = v
+            }
+        }
+
+        let bestCorrect = countCorrect()
+        let bestT = 0
+        let found = false
+
+        // 候選分界：最小值之下、每兩個相鄰值的中點、最大值之上
+        for (let k = 0; k <= vals.length; k++) {
+            let t = 0
+            if (k == 0) {
+                t = vals[0] - 1
+            } else if (k == vals.length) {
+                t = vals[k - 1] + 1
+            } else {
+                t = (vals[k - 1] + vals[k]) / 2
+            }
+
+            let c = 0
+            for (let i = 0; i < dataRadiation.length; i++) {
+                let r = Math.max(0, Math.min(1000, dataRadiation[i]))
+                let pred = r > t ? 1 : 0
+                if (pred == dataLabel[i]) c += 1
+            }
+
+            if (c > bestCorrect) {
+                bestCorrect = c
+                bestT = t
+                found = true
+            }
+        }
+
+        if (found) {
+            // weight * x + bias > 0  等同於  輻射值 > bestT
+            weight = 1
+            bias = -bestT / 1000
+        }
+    }
+
     // ---------- 基本訓練 ----------
 
     //% blockId=solarai_reset
@@ -140,62 +194,8 @@ namespace SolarAI {
         refineBoundary()
     }
 
-    // 單一輸入時，把所有可能的分界點都試一遍，
-    // 只有找到比目前更多答對的分界才會替換權重
-    function refineBoundary(): void {
-        // 整理出由小到大、不重複的輻射值（插入排序）
-        let vals: number[] = []
-        for (let i = 0; i < dataRadiation.length; i++) {
-            let v = Math.max(0, Math.min(1000, dataRadiation[i]))
-            if (vals.indexOf(v) < 0) {
-                let p = vals.length
-                vals.push(v)
-                while (p > 0 && vals[p - 1] > v) {
-                    vals[p] = vals[p - 1]
-                    p -= 1
-                }
-                vals[p] = v
-            }
-        }
-
-        let bestCorrect = countCorrect()
-        let bestT = 0
-        let found = false
-
-        // 候選分界：最小值之下、每兩個相鄰值的中點、最大值之上
-        for (let k = 0; k <= vals.length; k++) {
-            let t = 0
-            if (k == 0) {
-                t = vals[0] - 1
-            } else if (k == vals.length) {
-                t = vals[k - 1] + 1
-            } else {
-                t = (vals[k - 1] + vals[k]) / 2
-            }
-
-            let c = 0
-            for (let i = 0; i < dataRadiation.length; i++) {
-                let r = Math.max(0, Math.min(1000, dataRadiation[i]))
-                let pred = r > t ? 1 : 0
-                if (pred == dataLabel[i]) c += 1
-            }
-
-            if (c > bestCorrect) {
-                bestCorrect = c
-                bestT = t
-                found = true
-            }
-        }
-
-        if (found) {
-            // weight * x + bias > 0  等同於  輻射值 > bestT
-            weight = 1
-            bias = -bestT / 1000
-        }
-    }
-
     //% blockId=solarai_accuracy
-    //% block="AI 在資料集上的正確率 (%)"
+    //% block="AI 在資料集上的正確率百分比"
     //% group="資料集"
     //% weight=82
     export function getAccuracy(): number {
