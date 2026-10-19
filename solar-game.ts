@@ -17,128 +17,31 @@ enum Phase {
 }
 
 /**
- * 遊戲流程積木
+ * 遊戲畫面與隱藏答案。遊戲流程由小朋友用積木自己組出來。
  */
 //% weight=90 color=#4B7BEC icon="\uf11b" block="太陽能遊戲"
-//% groups='["遊戲流程","遊戲資料"]'
+//% groups='["畫面","回合","隱藏答案","分數"]'
 namespace SolarGame {
-    const ROUNDS = 10
     let phase = 0
     let round = 0
+    let totalRounds = 10
     let radiation = 0
     let trueThreshold = 500
-    let teacherCorrect = 0
-    let aiCorrect = 0
+    let teacherScore = 0
+    let aiScore = 0
     let aiGuess = 0
     let truth = 0
     let feedback = ""
     let feedbackColor = 1
-    let busy = false
 
     function center(target: Image, text: string, y: number, color: number) {
         target.print(text, 80 - text.length * 3, y, color)
     }
 
-    //% block="開始新遊戲"
-    //% group="遊戲流程" weight=100
-    export function startGame() {
-        SolarAI.resetAI()
-        trueThreshold = randint(350, 650)
-        teacherCorrect = 0
-        aiCorrect = 0
-        round = 1
-        radiation = randint(0, 1000)
-        feedback = ""
-        busy = false
-        phase = 1
-    }
+    // ---------- 畫面 ----------
 
-    //% block="老師回答 %label"
-    //% group="遊戲流程" weight=90
-    export function teacherAnswer(label: Label) {
-        if (phase != 1 || busy) return
-        busy = true
-        let correct = trueLabel(radiation)
-        SolarAI.addTrainingData(radiation, label)
-        if (label == correct) {
-            teacherCorrect += 1
-            feedback = "RIGHT!"
-            feedbackColor = 7
-        } else {
-            feedback = "WRONG: should " + (correct == 1 ? "CHARGE" : "SKIP")
-            feedbackColor = 2
-        }
-        pause(900)
-        if (round >= ROUNDS) {
-            runTest()
-        } else {
-            round += 1
-            radiation = randint(0, 1000)
-            feedback = ""
-            busy = false
-        }
-    }
-
-    //% block="開始 AI 測試"
-    //% group="遊戲流程" weight=80
-    export function runTest() {
-        feedback = "AI is learning..."
-        feedbackColor = 5
-        phase = 2
-        round = 0
-        pause(800)
-        SolarAI.trainAll(1000)
-        for (let i = 1; i <= ROUNDS; i++) {
-            round = i
-            radiation = randint(0, 1000)
-            aiGuess = SolarAI.predictAI(radiation)
-            truth = trueLabel(radiation)
-            if (aiGuess == truth) {
-                aiCorrect += 1
-                feedback = "AI is RIGHT"
-                feedbackColor = 7
-            } else {
-                feedback = "AI is WRONG"
-                feedbackColor = 2
-            }
-            pause(1300)
-        }
-        phase = 3
-        busy = false
-    }
-
-    //% block="現在是 %p 階段"
-    //% group="遊戲流程" weight=70
-    export function isPhase(p: Phase): boolean {
-        return phase == p
-    }
-
-    //% block="正確答案 輻射 %r"
-    //% group="遊戲資料" weight=60
-    export function trueLabel(r: number): number {
-        return r >= trueThreshold ? 1 : 0
-    }
-
-    //% block="目前輻射值"
-    //% group="遊戲資料" weight=50
-    export function currentRadiation(): number {
-        return radiation
-    }
-
-    //% block="老師答對幾題"
-    //% group="遊戲資料" weight=40
-    export function teacherScore(): number {
-        return teacherCorrect
-    }
-
-    //% block="AI 答對幾題"
-    //% group="遊戲資料" weight=30
-    export function aiScore(): number {
-        return aiCorrect
-    }
-
-    //% block="顯示遊戲畫面"
-    //% group="遊戲流程" weight=95
+    //% block="啟動遊戲畫面"
+    //% group="畫面" weight=100
     export function showScreen() {
         scene.setBackgroundColor(15)
         scene.createRenderable(0, (target, camera) => {
@@ -153,20 +56,20 @@ namespace SolarGame {
             if (phase == 3) {
                 let t = SolarAI.getThreshold()
                 center(target, "RESULT", 8, 5)
-                center(target, "You: " + teacherCorrect + "/" + ROUNDS + " correct", 28, 1)
-                center(target, "AI: " + aiCorrect + "/" + ROUNDS + " correct", 40, 1)
+                center(target, "You: " + teacherScore + "/" + totalRounds + " correct", 28, 1)
+                center(target, "AI: " + aiScore + "/" + totalRounds + " correct", 40, 1)
                 center(target, "AI learned: " + (t < 0 ? "?" : "" + t), 56, 9)
                 center(target, "True threshold: " + trueThreshold, 68, 9)
-                if (aiCorrect >= 9) center(target, "SOLAR MASTER!", 86, 5)
-                else if (aiCorrect >= 7) center(target, "GOOD TEACHER", 86, 7)
+                if (aiScore >= 9) center(target, "SOLAR MASTER!", 86, 5)
+                else if (aiScore >= 7) center(target, "GOOD TEACHER", 86, 7)
                 else center(target, "KEEP TRAINING", 86, 2)
                 center(target, "Press A to replay", 106, 7)
                 return
             }
             if (phase == 1) {
-                center(target, "TRAIN " + round + "/" + ROUNDS, 4, 5)
+                center(target, "TRAIN " + round + "/" + totalRounds, 4, 5)
             } else if (round > 0) {
-                center(target, "AI TEST " + round + "/" + ROUNDS, 4, 5)
+                center(target, "AI TEST " + round + "/" + totalRounds, 4, 5)
             }
             if (phase == 2 && round == 0) {
                 center(target, feedback, 56, feedbackColor)
@@ -180,10 +83,81 @@ namespace SolarGame {
                 center(target, feedback, 92, feedbackColor)
                 center(target, "A:CHARGE   B:SKIP", 108, 9)
             } else {
-                center(target, "AI says: " + (aiGuess == 1 ? "CHARGE" : "SKIP"), 88, 9)
-                center(target, "Truth: " + (truth == 1 ? "CHARGE" : "SKIP"), 98, 1)
+                center(target, "AI says: " + labelText(aiGuess), 88, 9)
+                center(target, "Truth: " + labelText(truth), 98, 1)
                 center(target, feedback, 110, feedbackColor)
             }
         })
+    }
+
+    //% block="設定階段為 %p"
+    //% group="畫面" weight=90
+    export function setPhase(p: Phase) {
+        phase = p
+    }
+
+    //% block="現在是 %p 階段"
+    //% group="畫面" weight=89
+    export function isPhase(p: Phase): boolean {
+        return phase == p
+    }
+
+    //% block="畫面顯示輻射值 %value"
+    //% group="畫面" weight=80
+    export function setRadiation(value: number) {
+        radiation = value
+    }
+
+    //% block="畫面提示 %text 顏色 %color"
+    //% color.shadow="colorindexpicker" color.defl=1
+    //% group="畫面" weight=70
+    export function setFeedback(text: string, color: number) {
+        feedback = text
+        feedbackColor = color
+    }
+
+    //% block="畫面顯示 AI 說 %guess 正確答案 %answer"
+    //% group="畫面" weight=60
+    export function setAIResult(guess: Label, answer: Label) {
+        aiGuess = guess
+        truth = answer
+    }
+
+    // ---------- 回合 ----------
+
+    //% block="畫面顯示第 %current 回合 共 %total 回合"
+    //% group="回合" weight=100
+    export function setRound(current: number, total: number) {
+        round = current
+        totalRounds = total
+    }
+
+    // ---------- 隱藏答案 ----------
+
+    //% block="隨機決定隱藏門檻"
+    //% group="隱藏答案" weight=100
+    export function pickHiddenThreshold() {
+        trueThreshold = randint(350, 650)
+    }
+
+    //% block="正確答案 輻射值 %r"
+    //% group="隱藏答案" weight=90
+    export function correctLabel(r: number): Label {
+        return r >= trueThreshold ? Label.Charge : Label.Skip
+    }
+
+    //% block="%label 的文字"
+    //% group="隱藏答案" weight=80
+    export function labelText(label: Label): string {
+        return label == Label.Charge ? "CHARGE" : "SKIP"
+    }
+
+    // ---------- 分數 ----------
+
+    //% block="畫面顯示分數 老師 %teacher AI %ai"
+    //% group="分數" weight=100
+    export function setScores(teacher: number, ai: number) {
+        teacherScore = teacher
+        aiScore = ai
     }
 }
