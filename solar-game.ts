@@ -118,7 +118,7 @@ namespace SolarGame {
 
     //% block="畫面顯示 AI 說 %guess 正確答案 %answer"
     //% group="畫面" weight=60
-    export function setAIResult(guess: Label, answer: Label) {
+    export function setAIResult(guess: number, answer: number) {
         aiGuess = guess
         truth = answer
     }
@@ -142,14 +142,14 @@ namespace SolarGame {
 
     //% block="正確答案 輻射值 %r"
     //% group="隱藏答案" weight=90
-    export function correctLabel(r: number): Label {
-        return r >= trueThreshold ? Label.Charge : Label.Skip
+    export function correctLabel(r: number): number {
+        return r >= trueThreshold ? 1 : 0
     }
 
     //% block="%label 的文字"
     //% group="隱藏答案" weight=80
-    export function labelText(label: Label): string {
-        return label == Label.Charge ? "CHARGE" : "SKIP"
+    export function labelText(label: number): string {
+        return label == 1 ? "CHARGE" : "SKIP"
     }
 
     // ---------- 分數 ----------
