@@ -240,6 +240,14 @@ namespace SolarAI {
 
     // ---------- 狀態查詢 ----------
 
+    //% blockId=solarai_version
+    //% block="Solar AI 版本"
+    //% group="狀態"
+    //% weight=20
+    export function getVersion(): string {
+        return "0.2.0"
+    }
+
     //% blockId=solarai_last_prediction
     //% block="取得上次預測"
     //% group="狀態"
