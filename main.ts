@@ -22,6 +22,17 @@ namespace SolarAI {
         return weight * x + bias > 0 ? 1 : 0
     }
 
+    // 目前權重在資料集上答對的筆數
+    function countCorrect(): number {
+        let correct = 0
+        for (let i = 0; i < dataRadiation.length; i++) {
+            if (predictNormalized(normalize(dataRadiation[i])) == dataLabel[i]) {
+                correct += 1
+            }
+        }
+        return correct
+    }
+
     // 訓練一筆資料，回傳這筆是否預測錯誤
     function trainStep(radiation: number, label: number): boolean {
         let x = normalize(radiation)
@@ -97,17 +108,33 @@ namespace SolarAI {
         lastEpochsUsed = 0
         if (dataRadiation.length == 0) return
 
+        // 口袋演算法：記住訓練過程中答對最多的那組權重
+        let bestCorrect = countCorrect()
+        let bestWeight = weight
+        let bestBias = bias
+
         for (let e = 0; e < epochs; e++) {
             let errors = 0
             for (let i = 0; i < dataRadiation.length; i++) {
                 if (trainStep(dataRadiation[i], dataLabel[i])) {
                     errors += 1
+                    // 權重剛被修正，檢查是否刷新最佳紀錄
+                    let c = countCorrect()
+                    if (c > bestCorrect) {
+                        bestCorrect = c
+                        bestWeight = weight
+                        bestBias = bias
+                    }
                 }
             }
             lastEpochsUsed = e + 1
             // 整輪都沒有錯，代表已收斂，提早結束
             if (errors == 0) break
         }
+
+        // 還原成最佳權重（資料有矛盾時，最後一輪的權重不一定最好）
+        weight = bestWeight
+        bias = bestBias
     }
 
     //% blockId=solarai_accuracy
