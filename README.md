@@ -1,4 +1,3 @@
-# solar-ai-arcade
 # Solar AI
 
 MakeCode Arcade 的單輸入感知器（Perceptron）積木，可學習「輻射值高於某門檻就是 1」這類二分類問題。
