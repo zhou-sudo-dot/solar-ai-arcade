@@ -1,0 +1,16 @@
+
+{
+    "name": "solar-ai-arcade",
+    "version": "0.0.1",
+    "description": "Solar AI training blocks for MakeCode Arcade",
+    "dependencies": {
+        "device": "*"
+    },
+    "files": [
+        "main.ts"
+    ],
+    "supportedTargets": [
+        "arcade"
+    ],
+    "preferredEditor": "tsprj"
+}
