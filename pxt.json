@@ -7,7 +7,7 @@
     },
     "files": [
         "main.ts",
-        "solar-ai-arcade": "github:zhou-sudo-dot/solar-ai-arcade#main",
+        "solar-game.ts",
         "README.md"
     ],
     "testFiles": [
