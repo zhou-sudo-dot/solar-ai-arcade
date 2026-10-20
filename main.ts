@@ -195,7 +195,7 @@ namespace SolarAI {
     }
 
     //% blockId=solarai_accuracy
-    //% block="AI 在資料集上的正確率 (%)"
+    //% block="AI 在資料集上的正確率 (百分比)"
     //% group="資料集"
     //% weight=82
     export function getAccuracy(): number {
