@@ -140,6 +140,12 @@ namespace SolarGame {
         trueThreshold = randint(350, 650)
     }
 
+    //% block="答案 %label"
+    //% group="隱藏答案" weight=95
+    export function labelValue(label: Label): number {
+        return label
+    }
+
     //% block="正確答案 輻射值 %r"
     //% group="隱藏答案" weight=90
     export function correctLabel(r: number): number {
